@@ -19,14 +19,23 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - name: Configurar SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/key.pem
-          chmod 600 ~/.ssh/key.pem
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+         - name: Configurar SSH
+     shell: bash
+     env:
+       EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+       EC2_HOST: ${{ secrets.EC2_HOST }}
+     run: |
+       mkdir -p ~/.ssh
+       printf '%s' "$EC2_SSH_KEY" | tr -d '\r' | sed 's/\\n/\n/g' > ~/.ssh/key.pem
+       chmod 600 ~/.ssh/key.pem
+       ssh-keygen -y -f ~/.ssh/key.pem > /dev/null
+       ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
-      - name: Copiar out/ a EC2
-        run: |
-          rsync -avz --delete -e "ssh -i ~/.ssh/key.pem" \
-            ./out/ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/var/www/html/git 
+         - name: Copiar out/ a EC2
+     shell: bash
+     env:
+       EC2_USER: ${{ secrets.EC2_USER }}
+       EC2_HOST: ${{ secrets.EC2_HOST }}
+     run: |
+       rsync -avz --delete -e "ssh -i ~/.ssh/key.pem" \
+         ./out/ "$EC2_USER@$EC2_HOST:/var/www/html/git/"
