@@ -1,3 +1,4 @@
+# copiar carpeta out/ a EC2
 name: Deploy Next.js (estático) a EC2
 
 on:
